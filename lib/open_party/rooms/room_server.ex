@@ -154,18 +154,23 @@ defmodule OpenParty.Rooms.RoomServer do
     end
   end
 
-  def handle_call({:sync_check, _user_id, client_position_ms, _revision}, _from, state) do
-    if valid_position_ms?(client_position_ms) do
-      authoritative_pos = current_position_ms(state)
-      drift = abs(authoritative_pos - client_position_ms)
+  def handle_call({:sync_check, _user_id, client_position_ms, client_revision}, _from, state) do
+    cond do
+      not valid_position_ms?(client_position_ms) ->
+        {:reply, {:error, :invalid_position}, state}
 
-      cond do
-        drift <= 250 -> {:reply, {:ok, :in_sync}, state}
-        drift <= 1200 -> {:reply, {:ok, {:minor_drift, drift}}, state}
-        true -> {:reply, {:ok, {:corrective_snapshot, snapshot(state)}}, state}
-      end
-    else
-      {:reply, {:error, :invalid_position}, state}
+      client_revision < state.revision ->
+        {:reply, {:ok, {:corrective_snapshot, snapshot(state)}}, state}
+
+      true ->
+        authoritative_pos = current_position_ms(state)
+        drift = abs(authoritative_pos - client_position_ms)
+
+        cond do
+          drift <= 250 -> {:reply, {:ok, :in_sync}, state}
+          drift <= 1200 -> {:reply, {:ok, {:minor_drift, drift}}, state}
+          true -> {:reply, {:ok, {:corrective_snapshot, snapshot(state)}}, state}
+        end
     end
   end
 
