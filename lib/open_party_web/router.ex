@@ -37,6 +37,16 @@ defmodule OpenPartyWeb.Router do
     post "/tokens", TokenController, :create
   end
 
+  scope "/api", OpenPartyWeb do
+    pipe_through :api_auth
+
+    scope "/rooms" do
+      post "/", RoomController, :create
+      get "/code/:code", RoomController, :show_by_code
+      get "/:id", RoomController, :show
+    end
+  end
+
   # Other scopes may use custom stacks.
   # scope "/api", OpenPartyWeb do
   #   pipe_through :api

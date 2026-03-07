@@ -389,7 +389,7 @@ Max Concurrent: 5 (Wave 2)
 
 <!-- WAVE 3 -->
 
-- [ ] T9. **RoomSupervisor + RoomRegistry + RoomManager** — `unspecified-high`
+- [x] T9. **RoomSupervisor + RoomRegistry + RoomManager** — `unspecified-high`
   Wire up the process management layer. DynamicSupervisor to spawn room processes, Registry to find them, and a RoomManager public API.
   **What to do**:
   1. Create `lib/open_party/rooms/room_registry.ex`:
@@ -465,7 +465,7 @@ Max Concurrent: 5 (Wave 2)
   **Must NOT do**: Do not allow unauthenticated socket connections. Do not skip the `:after_join` send pattern for Presence. Do not call `Presence.track` directly in `join/3`.
   **Verify**: `mix compile` succeeds. Write a manual channel test stub to verify join works.
 
-- [ ] T12. **API bearer token auth** — `quick`
+- [x] T12. **API bearer token auth** — `quick`
   Wire up bearer token authentication for HTTP API endpoints. `phx.gen.auth` generated the token table — add the API token creation endpoint and the plug.
   **What to do**:
   1. Add `create_user_api_token/1` to `Accounts` context if not already generated (check — phx.gen.auth 1.8 may have generated it)

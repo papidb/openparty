@@ -1,5 +1,5 @@
 defmodule OpenParty.RoomManager do
-  alias OpenParty.{Rooms, RoomRegistry, RoomSupervisor}
+  alias OpenParty.{RoomRegistry, RoomSupervisor, Rooms}
 
   def start_or_get_room(room_id) do
     case Rooms.get_room(room_id) do
