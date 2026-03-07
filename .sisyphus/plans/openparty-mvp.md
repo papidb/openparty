@@ -418,7 +418,7 @@ Max Concurrent: 5 (Wave 2)
   **Must NOT do**: Do not add restart strategies beyond `:one_for_one`. Do not persist GenServer state to DB on crash. Do not add a custom process monitor.
   **Verify**: `mix compile` succeeds. In `iex -S mix`, call `RoomManager.start_or_get_room(some_uuid)` — it should start a process. Call it again — should return existing pid.
 
-- [ ] T10. **Room HTTP API endpoints** — `quick`
+- [x] T10. **Room HTTP API endpoints** — `quick`
   Add the three room HTTP endpoints. Requires authentication (bearer token from T12 — implement auth plug here as a placeholder that T12 will fill in).
   **What to do**:
   1. Create `lib/open_party_web/controllers/room_controller.ex` with:
@@ -442,7 +442,7 @@ Max Concurrent: 5 (Wave 2)
   **Must NOT do**: Do not add pagination. Do not return playback state from HTTP. Do not add PUT/PATCH/DELETE endpoints.
   **Verify**: `mix compile` succeeds. Route table correct via `mix phx.routes`.
 
-- [ ] T11. **Socket auth + RoomChannel join + Presence** — `deep`
+- [x] T11. **Socket auth + RoomChannel join + Presence** — `deep`
   Implement the authenticated WebSocket socket and the RoomChannel. Users must authenticate the socket with a valid bearer token. On join, send snapshot and track presence.
   **What to do**:
   1. Create or update `lib/open_party_web/channels/user_socket.ex`:

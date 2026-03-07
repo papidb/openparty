@@ -6,6 +6,7 @@ defmodule OpenParty.Rooms.RoomServer do
 
   @type room_id :: String.t()
   @type user_id :: String.t()
+  @idle_timeout_ms 15 * 60 * 1_000
 
   def start_link(room_id) do
     GenServer.start_link(__MODULE__, room_id, name: via(room_id))
@@ -35,7 +36,34 @@ defmodule OpenParty.Rooms.RoomServer do
       last_updated_at_ms: now_ms()
     }
 
+    Phoenix.PubSub.subscribe(OpenParty.PubSub, "room:" <> room_id)
+
+    state = maybe_start_idle_timer(state)
+
     {:ok, state}
+  end
+
+  @impl true
+  def handle_info(%Phoenix.Socket.Broadcast{event: "presence_diff", payload: payload}, state) do
+    state =
+      if map_size(payload.joins) > 0 do
+        cancel_idle_timer(state)
+      else
+        state
+      end
+
+    state = maybe_start_idle_timer(state)
+
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_info({:idle_timeout, timer_ref}, state) do
+    if match?({^timer_ref, _}, state.idle_timer_ref) do
+      {:stop, :normal, state}
+    else
+      {:noreply, state}
+    end
   end
 
   @impl true
@@ -170,6 +198,28 @@ defmodule OpenParty.Rooms.RoomServer do
 
   defp broadcast_update(room_id, payload) do
     OpenPartyWeb.Endpoint.broadcast!("room:" <> to_string(room_id), "playback_updated", payload)
+  end
+
+  defp maybe_start_idle_timer(state) do
+    presences = OpenPartyWeb.Presence.list("room:" <> state.room_id)
+
+    if map_size(presences) == 0 and is_nil(state.idle_timer_ref) do
+      timer_ref = make_ref()
+      process_timer_ref = Process.send_after(self(), {:idle_timeout, timer_ref}, @idle_timeout_ms)
+      %{state | idle_timer_ref: {timer_ref, process_timer_ref}}
+    else
+      state
+    end
+  end
+
+  defp cancel_idle_timer(state) do
+    if state.idle_timer_ref do
+      {_timer_ref, process_timer_ref} = state.idle_timer_ref
+      Process.cancel_timer(process_timer_ref)
+      %{state | idle_timer_ref: nil}
+    else
+      state
+    end
   end
 
   defp now_ms, do: System.system_time(:millisecond)

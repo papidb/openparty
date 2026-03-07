@@ -18,6 +18,7 @@ defmodule OpenPartyWeb.Endpoint do
   socket "/socket", OpenPartyWeb.UserSocket,
     websocket: true,
     longpoll: false
+
   # Serve at "/" the static files from "priv/static" directory.
   #
   # When code reloading is disabled (e.g., in production),

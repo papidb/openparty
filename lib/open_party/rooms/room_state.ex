@@ -6,6 +6,7 @@ defmodule OpenParty.Rooms.RoomState do
     :room_id,
     :host_user_id,
     :media_id,
+    :idle_timer_ref,
     playback_state: :paused,
     base_position_ms: 0,
     last_updated_at_ms: 0,

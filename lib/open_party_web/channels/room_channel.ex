@@ -30,4 +30,65 @@ defmodule OpenPartyWeb.RoomChannel do
     push(socket, "snapshot", RoomServer.get_snapshot(room_id))
     {:noreply, socket}
   end
+
+  @impl true
+  def handle_in("play", %{"position_ms" => position_ms} = params, socket) do
+    case RoomServer.play(
+           socket.assigns.room_id,
+           socket.assigns.user_id,
+           position_ms,
+           params["media_id"]
+         ) do
+      {:ok, snapshot} ->
+        {:reply, {:ok, snapshot}, socket}
+
+      {:error, :forbidden} ->
+        {:reply, {:error, %{code: "forbidden", message: "Only the host can control playback"}},
+         socket}
+
+      {:error, :invalid_position} ->
+        {:reply,
+         {:error,
+          %{code: "invalid_position", message: "position_ms must be a non-negative integer"}},
+         socket}
+    end
+  end
+
+  def handle_in("pause", %{"position_ms" => position_ms}, socket) do
+    case RoomServer.pause(socket.assigns.room_id, socket.assigns.user_id, position_ms) do
+      {:ok, snapshot} ->
+        {:reply, {:ok, snapshot}, socket}
+
+      {:error, :forbidden} ->
+        {:reply, {:error, %{code: "forbidden", message: "Only the host can control playback"}},
+         socket}
+
+      {:error, :invalid_position} ->
+        {:reply,
+         {:error,
+          %{code: "invalid_position", message: "position_ms must be a non-negative integer"}},
+         socket}
+    end
+  end
+
+  def handle_in("seek", %{"position_ms" => position_ms}, socket) do
+    case RoomServer.seek(socket.assigns.room_id, socket.assigns.user_id, position_ms) do
+      {:ok, snapshot} ->
+        {:reply, {:ok, snapshot}, socket}
+
+      {:error, :forbidden} ->
+        {:reply, {:error, %{code: "forbidden", message: "Only the host can control playback"}},
+         socket}
+
+      {:error, :invalid_position} ->
+        {:reply,
+         {:error,
+          %{code: "invalid_position", message: "position_ms must be a non-negative integer"}},
+         socket}
+    end
+  end
+
+  def handle_in(event, _params, socket) when event in ["play", "pause", "seek"] do
+    {:reply, {:error, %{code: "missing_field", message: "position_ms is required"}}, socket}
+  end
 end
