@@ -511,7 +511,7 @@ Max Concurrent: 5 (Wave 2)
   **Must NOT do**: Do not allow non-host commands to silently succeed. Do not skip the `changed_by` field in broadcast. Do not call `Repo` from the channel.
   **Verify**: `mix compile` succeeds. Channel test: host sends play → all clients receive `playback_updated`. Non-host sends play → receives `{code: "forbidden"}` error.
 
-- [ ] T14. **Snapshot + sync_check + drift correction** — `deep`
+- [x] T14. **Snapshot + sync_check + drift correction** — `deep`
   Implement `request_snapshot` and `sync_check` handlers. This is the resync mechanism.
   **What to do**:
   1. In `room_channel.ex`, add `handle_in/3` for `"request_snapshot"`:

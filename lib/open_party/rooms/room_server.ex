@@ -58,6 +58,11 @@ defmodule OpenParty.Rooms.RoomServer do
   end
 
   @impl true
+  def handle_info(%Phoenix.Socket.Broadcast{}, state) do
+    {:noreply, state}
+  end
+
+  @impl true
   def handle_info({:idle_timeout, timer_ref}, state) do
     if match?({^timer_ref, _}, state.idle_timer_ref) do
       {:stop, :normal, state}
