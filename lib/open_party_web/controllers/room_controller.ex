@@ -1,7 +1,53 @@
 defmodule OpenPartyWeb.RoomController do
   use OpenPartyWeb, :controller
+  use OpenApiSpex.ControllerSpecs
 
+  alias OpenApiSpex.Schema
   alias OpenParty.Rooms
+  alias OpenPartyWeb.Schemas
+
+  operation(:create,
+    summary: "Create room",
+    security: [%{"bearerAuth" => []}],
+    request_body:
+      {"Room create request", "application/json", Schemas.RoomCreateRequest, required: false},
+    responses: %{
+      201 => {"Room created", "application/json", Schemas.RoomResponse},
+      401 => {"Unauthorized", "application/json", Schemas.ErrorResponse},
+      422 => {"Unprocessable entity", "application/json", Schemas.ErrorResponse}
+    }
+  )
+
+  operation(:show,
+    summary: "Get room by id",
+    security: [%{"bearerAuth" => []}],
+    parameters: [
+      id: [
+        in: :path,
+        description: "Room ID",
+        required: true,
+        schema: %Schema{type: :string, format: :uuid}
+      ]
+    ],
+    responses: %{
+      200 => {"Room", "application/json", Schemas.RoomResponse},
+      401 => {"Unauthorized", "application/json", Schemas.ErrorResponse},
+      404 => {"Not found", "application/json", Schemas.ErrorResponse}
+    }
+  )
+
+  operation(:show_by_code,
+    summary: "Get room by invite code",
+    security: [%{"bearerAuth" => []}],
+    parameters: [
+      code: [in: :path, description: "Invite code", type: :string, required: true]
+    ],
+    responses: %{
+      200 => {"Room", "application/json", Schemas.RoomResponse},
+      401 => {"Unauthorized", "application/json", Schemas.ErrorResponse},
+      404 => {"Not found", "application/json", Schemas.ErrorResponse}
+    }
+  )
 
   def create(conn, params) do
     user = conn.assigns.current_scope.user

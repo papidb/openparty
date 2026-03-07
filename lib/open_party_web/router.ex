@@ -15,11 +15,13 @@ defmodule OpenPartyWeb.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
+    plug OpenApiSpex.Plug.PutApiSpec, module: OpenPartyWeb.ApiSpec
   end
 
   pipeline :api_auth do
     plug :accepts, ["json"]
     plug :fetch_current_scope_for_api_user
+    plug OpenApiSpex.Plug.PutApiSpec, module: OpenPartyWeb.ApiSpec
   end
 
   scope "/", OpenPartyWeb do
@@ -35,6 +37,16 @@ defmodule OpenPartyWeb.Router do
 
     get "/health", HealthController, :index
     post "/tokens", TokenController, :create
+  end
+
+  scope "/api" do
+    pipe_through :api
+
+    get "/openapi", OpenApiSpex.Plug.RenderSpec, []
+
+    forward "/docs", OpenApiSpex.Plug.SwaggerUI,
+      path: "/api/openapi",
+      default_model_expand_depth: 4
   end
 
   scope "/api", OpenPartyWeb do

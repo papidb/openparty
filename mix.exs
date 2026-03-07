@@ -65,6 +65,7 @@ defmodule OpenParty.MixProject do
       {:telemetry_poller, "~> 1.0"},
       {:jason, "~> 1.2"},
       {:swoosh, "~> 1.16"},
+      {:open_api_spex, "~> 3.20"},
       {:corsica, "~> 2.0"},
       {:dns_cluster, "~> 0.2.0"},
       {:bandit, "~> 1.5"}
