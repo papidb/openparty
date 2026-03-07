@@ -233,6 +233,37 @@ defmodule OpenParty.Accounts do
   end
 
   @doc """
+  Generates an API token.
+  """
+  def create_user_api_token(user) do
+    token = :crypto.strong_rand_bytes(32)
+    hashed_token = :crypto.hash(:sha256, token)
+
+    Repo.insert!(%UserToken{token: hashed_token, context: "api", user_id: user.id})
+
+    Base.url_encode64(token, padding: false)
+  end
+
+  @doc """
+  Gets the user with the given API token.
+  """
+  def fetch_user_by_api_token(token) when is_binary(token) do
+    with {:ok, decoded_token} <- Base.url_decode64(token, padding: false),
+         hashed_token <- :crypto.hash(:sha256, decoded_token),
+         %User{} = user <-
+           Repo.one(
+             from user_token in UserToken,
+               where: user_token.token == ^hashed_token and user_token.context == "api",
+               join: user in assoc(user_token, :user),
+               select: user
+           ) do
+      {:ok, user}
+    else
+      _ -> :error
+    end
+  end
+
+  @doc """
   Logs the user in by magic link.
 
   There are three cases to consider:

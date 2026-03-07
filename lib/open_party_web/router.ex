@@ -17,6 +17,11 @@ defmodule OpenPartyWeb.Router do
     plug :accepts, ["json"]
   end
 
+  pipeline :api_auth do
+    plug :accepts, ["json"]
+    plug :fetch_current_scope_for_api_user
+  end
+
   scope "/", OpenPartyWeb do
     pipe_through :browser
 
@@ -29,6 +34,7 @@ defmodule OpenPartyWeb.Router do
     pipe_through :api
 
     get "/health", HealthController, :index
+    post "/tokens", TokenController, :create
   end
 
   # Other scopes may use custom stacks.

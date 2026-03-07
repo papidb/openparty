@@ -282,7 +282,7 @@ Max Concurrent: 5 (Wave 2)
   **Must NOT do**: Do not hardcode credentials. Do not break existing email/password flow.
   **Verify**: `mix compile` succeeds. Auth routes exist in `mix phx.routes`.
 
-- [ ] T5. **GitHub OAuth setup** — `quick`
+- [x] T5. **GitHub OAuth setup** — `quick`
   Add GitHub OAuth login using `ueberauth_github`. Reuse the `AuthController` created in T4.
   **What to do**:
   1. Add to `mix.exs`: `{:ueberauth_github, "~> 0.8"}`
@@ -348,7 +348,7 @@ Max Concurrent: 5 (Wave 2)
   **Must NOT do**: Do not hardcode credentials. Do not break existing test setup.
   **Verify**: `mix compile` succeeds. Swoosh local adapter is active in dev.
 
-- [ ] T8. **RoomState + RoomServer GenServer** — `deep`
+- [x] T8. **RoomState + RoomServer GenServer** — `deep`
   Implement the core in-memory room state. This is the authoritative source of truth for playback. One GenServer per active room. Strictly follows the spec's state model.
   **What to do**:
   1. Create `lib/open_party/rooms/room_state.ex`:

@@ -75,6 +75,15 @@ defmodule OpenPartyWeb.UserAuth do
     end
   end
 
+  def fetch_current_scope_for_api_user(conn, _opts) do
+    with [<<"Bearer ", token::binary>>] <- get_req_header(conn, "authorization"),
+         {:ok, user} <- Accounts.fetch_user_by_api_token(token) do
+      assign(conn, :current_scope, %Scope{user: user})
+    else
+      _ -> conn |> send_resp(:unauthorized, "") |> halt()
+    end
+  end
+
   defp ensure_user_token(conn) do
     if token = get_session(conn, :user_token) do
       {token, conn}

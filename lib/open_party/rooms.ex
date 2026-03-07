@@ -24,6 +24,16 @@ defmodule OpenParty.Rooms do
   end
 
   @doc """
+  Gets a room by id.
+  """
+  def get_room(id) do
+    case Repo.get(Room, id) do
+      %Room{} = room -> {:ok, room}
+      nil -> {:error, :not_found}
+    end
+  end
+
+  @doc """
   Gets a room by invite code.
   """
   def get_room_by_invite_code(code) do

@@ -12,6 +12,8 @@ defmodule OpenParty.Application do
       OpenParty.Repo,
       {DNSCluster, query: Application.get_env(:open_party, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: OpenParty.PubSub},
+      OpenParty.RoomRegistry,
+      OpenParty.RoomSupervisor,
       # Start a worker by calling: OpenParty.Worker.start_link(arg)
       # {OpenParty.Worker, arg},
       # Start to serve requests, typically the last entry
