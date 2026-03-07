@@ -60,6 +60,7 @@ defmodule OpenParty.MixProject do
        depth: 1},
       {:ueberauth, "~> 0.10"},
       {:ueberauth_google, "~> 0.12"},
+      {:ueberauth_github, "~> 0.8"},
       {:telemetry_metrics, "~> 1.0"},
       {:telemetry_poller, "~> 1.0"},
       {:jason, "~> 1.2"},
