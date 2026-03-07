@@ -7,6 +7,8 @@ defmodule OpenParty.Accounts.User do
   schema "users" do
     field :email, :string
     field :display_name, :string, default: ""
+    field :oauth_provider, :string
+    field :oauth_uid, :string
     field :password, :string, virtual: true, redact: true
     field :hashed_password, :string, redact: true
     field :confirmed_at, :utc_datetime

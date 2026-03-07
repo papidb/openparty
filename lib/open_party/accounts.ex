@@ -80,6 +80,38 @@ defmodule OpenParty.Accounts do
     |> Repo.insert()
   end
 
+  @doc """
+  Finds an existing user by OAuth email or creates one.
+  """
+  def find_or_create_from_oauth(%Ueberauth.Auth{} = auth) do
+    email = auth.info.email
+    provider = to_string(auth.provider)
+    uid = auth.uid && to_string(auth.uid)
+    display_name = auth.info.name || auth.info.nickname || ""
+
+    cond do
+      is_nil(email) or email == "" ->
+        {:error, :email_not_found}
+
+      is_nil(uid) or uid == "" ->
+        {:error, :uid_not_found}
+
+      user = get_user_by_email(email) ->
+        maybe_update_user_oauth(user, provider, uid, display_name)
+
+      true ->
+        %User{}
+        |> Ecto.Changeset.change(%{
+          email: email,
+          display_name: display_name,
+          oauth_provider: provider,
+          oauth_uid: uid,
+          confirmed_at: DateTime.utc_now(:second)
+        })
+        |> Repo.insert()
+    end
+  end
+
   ## Settings
 
   @doc """
@@ -293,5 +325,27 @@ defmodule OpenParty.Accounts do
         {:ok, {user, tokens_to_expire}}
       end
     end)
+  end
+
+  defp maybe_update_user_oauth(user, provider, uid, display_name) do
+    updated_display_name =
+      if user.display_name in [nil, ""] and display_name != "" do
+        display_name
+      else
+        user.display_name
+      end
+
+    if user.oauth_provider == provider and user.oauth_uid == uid and
+         user.display_name == updated_display_name do
+      {:ok, user}
+    else
+      user
+      |> Ecto.Changeset.change(%{
+        oauth_provider: provider,
+        oauth_uid: uid,
+        display_name: updated_display_name
+      })
+      |> Repo.update()
+    end
   end
 end

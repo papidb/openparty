@@ -58,6 +58,8 @@ defmodule OpenParty.MixProject do
        app: false,
        compile: false,
        depth: 1},
+      {:ueberauth, "~> 0.10"},
+      {:ueberauth_google, "~> 0.12"},
       {:telemetry_metrics, "~> 1.0"},
       {:telemetry_poller, "~> 1.0"},
       {:jason, "~> 1.2"},

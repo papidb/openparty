@@ -21,6 +21,8 @@ defmodule OpenPartyWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :home
+    get "/auth/:provider", AuthController, :request
+    get "/auth/:provider/callback", AuthController, :callback
   end
 
   scope "/api", OpenPartyWeb do
@@ -63,5 +65,13 @@ defmodule OpenPartyWeb.Router do
 
     post "/users/log-in", UserSessionController, :create
     delete "/users/log-out", UserSessionController, :delete
+  end
+
+  if Application.compile_env(:open_party, :dev_routes) do
+    scope "/dev" do
+      pipe_through :browser
+
+      forward "/mailbox", Plug.Swoosh.MailboxPreview
+    end
   end
 end

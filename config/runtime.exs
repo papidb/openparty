@@ -68,6 +68,11 @@ if config_env() == :prod do
     ],
     secret_key_base: secret_key_base
 
+  config :open_party, OpenParty.Mailer,
+    adapter: Swoosh.Adapters.Mailgun,
+    api_key: System.fetch_env!("MAILGUN_API_KEY"),
+    domain: System.fetch_env!("MAILGUN_DOMAIN")
+
   # ## SSL Support
   #
   # To get SSL working, you will need to add the `https` key

@@ -241,7 +241,7 @@ Max Concurrent: 5 (Wave 2)
   **Verify**: `mix compile` exits 0. `curl -s http://localhost:4000/api/health | jq '.status'` returns `"ok"` after `mix phx.server`.
   **Save evidence**: `.sisyphus/evidence/task-2-health.txt`
 
-- [ ] T3. **Auth system (phx.gen.auth + confirmation disabled)** — `unspecified-high`
+- [x] T3. **Auth system (phx.gen.auth + confirmation disabled)** — `unspecified-high`
   Generate the full authentication system with `mix phx.gen.auth` using LiveView (user's preference). Then disable email confirmation by default (keep all generated code, just comment out the confirmation guard plug) with a clear `# CONFIRMATION_DISABLED` comment explaining how to re-enable.
   **What to do**:
   1. Run: `mix phx.gen.auth Accounts User users` (accept LiveView default — answer Y at the prompt)
