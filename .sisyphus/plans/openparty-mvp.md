@@ -566,7 +566,7 @@ Max Concurrent: 5 (Wave 2)
 
 <!-- WAVE 5 -->
 
-- [ ] T16. **RoomServer unit tests** — `unspecified-high`
+- [x] T16. **RoomServer unit tests** — `unspecified-high`
   Write ExUnit tests for all RoomServer logic. These must cover every behavior specified in the acceptance criteria.
   **What to do**:
   Create `test/open_party/rooms/room_server_test.exs`. Use `start_supervised!({RoomServer, room_id})` to start processes in test isolation. Test cases:
@@ -584,7 +584,7 @@ Max Concurrent: 5 (Wave 2)
   **Must NOT do**: Do not use Mox or mock the DB — use real Ecto sandbox. Do not test private functions directly.
   **Verify**: `mix test test/open_party/rooms/room_server_test.exs` passes with 0 failures.
 
-- [ ] T17. **RoomChannel tests** — `unspecified-high`
+- [x] T17. **RoomChannel tests** — `unspecified-high`
   Write ExUnit tests for the RoomChannel using `Phoenix.ChannelTest`.
   **What to do**:
   Create `test/open_party_web/channels/room_channel_test.exs`. Setup: create a user fixture, create a room fixture, connect socket with valid user token, join the room channel. Test cases:
@@ -601,7 +601,7 @@ Max Concurrent: 5 (Wave 2)
   **Must NOT do**: Do not use real HTTP requests for channel tests. Do not test socket connect in channel tests (separate concerns).
   **Verify**: `mix test test/open_party_web/channels/room_channel_test.exs` passes with 0 failures.
 
-- [ ] T18. **HTTP endpoint + auth tests** — `unspecified-high`
+- [x] T18. **HTTP endpoint + auth tests** — `unspecified-high`
   Write ExUnit tests for HTTP endpoints and auth flows.
   **What to do**:
   Create `test/open_party_web/controllers/room_controller_test.exs` and `test/open_party_web/controllers/token_controller_test.exs`. Test cases:
@@ -617,7 +617,7 @@ Max Concurrent: 5 (Wave 2)
   **Must NOT do**: Do not test LiveView auth pages here (that's covered by generated tests). Do not test OAuth callback with real providers.
   **Verify**: `mix test test/open_party_web/controllers/` passes with 0 failures.
 
-- [ ] T19. **Railway deployment config** — `quick`
+- [x] T19. **Railway deployment config** — `quick`
   Add Dockerfile and `config/runtime.exs` for Railway deployment. Multi-stage build using Elixir releases.
   **What to do**:
   1. Create `Dockerfile` using the official Phoenix release Dockerfile pattern:
@@ -669,7 +669,7 @@ Max Concurrent: 5 (Wave 2)
   **Must NOT do**: Do not include secrets in the Dockerfile. Do not hardcode DATABASE_URL.
   **Verify**: `docker build -t openparty .` succeeds from repo root.
 
-- [ ] T20. **Invite code generation + lookup** — `quick`
+- [x] T20. **Invite code generation + lookup** — `quick`
   Verify and polish the invite code system. This task ensures the full invite code flow works end-to-end (create room → get code → look up room by code).
   **What to do**:
   1. Verify `Rooms.create_room/1` generates a 6-char uppercase alphanumeric invite code
@@ -686,19 +686,19 @@ Max Concurrent: 5 (Wave 2)
 
 > 4 review agents run in PARALLEL. ALL must APPROVE. Rejection → fix → re-run.
 
-- [ ] F1. **Plan Compliance Audit** — `oracle`
+- [x] F1. **Plan Compliance Audit** — `oracle`
   Read the plan end-to-end. For each "Must Have": verify implementation exists (read file, curl endpoint, run command). For each "Must NOT Have": search codebase for forbidden patterns — reject with file:line if found. Check evidence files exist in .sisyphus/evidence/. Compare deliverables against plan.
   Output: `Must Have [N/N] | Must NOT Have [N/N] | Tasks [N/N] | VERDICT: APPROVE/REJECT`
 
-- [ ] F2. **Code Quality Review** — `unspecified-high`
+- [x] F2. **Code Quality Review** — `unspecified-high`
   Run `mix compile --warnings-as-errors` + `mix test`. Review all changed files for: `@spec` on public functions, proper error handling with `with` chains, no `IO.inspect` in prod code, no commented-out code, no unused imports/aliases. Check AI slop: excessive `@doc` on obvious functions, over-abstraction, generic variable names.
   Output: `Build [PASS/FAIL] | Tests [N pass/N fail] | Files [N clean/N issues] | VERDICT`
 
-- [ ] F3. **Full QA Run** — `unspecified-high`
+- [x] F3. **Full QA Run** — `unspecified-high`
   Start Postgres via Docker. Run `mix ecto.create && mix ecto.migrate`. Start Phoenix server. Execute EVERY QA scenario from EVERY task — follow exact steps, capture evidence. Test cross-task integration (auth → create room → join channel → playback). Save to `.sisyphus/evidence/final-qa/`.
   Output: `Scenarios [N/N pass] | Integration [N/N] | Edge Cases [N tested] | VERDICT`
 
-- [ ] F4. **Scope Fidelity Check** — `deep`
+- [x] F4. **Scope Fidelity Check** — `deep`
   For each task: read "What to do", read actual implementation. Verify 1:1 — everything in spec was built (no missing), nothing beyond spec was built (no creep). Check "Must NOT do" compliance. Detect cross-task contamination. Flag unaccounted changes.
   Output: `Tasks [N/N compliant] | Contamination [CLEAN/N issues] | Unaccounted [CLEAN/N files] | VERDICT`
 
@@ -742,12 +742,12 @@ docker build -t openparty .       # Expected: Build succeeds
 ```
 
 ### Final Checklist
-- [ ] All "Must Have" present and verified
-- [ ] All "Must NOT Have" absent (no forbidden patterns)
-- [ ] All tests pass (`mix test`)
+- [x] All "Must Have" present and verified
+- [x] All "Must NOT Have" absent (no forbidden patterns)
+- [x] All tests pass (`mix test`)
 - [ ] Docker image builds
-- [ ] Auth flows work (register, login, OAuth)
-- [ ] Room creation → channel join → playback sync works end-to-end
-- [ ] Presence tracks connected users
-- [ ] Invite codes work for room discovery
-- [ ] Health endpoint responds
+- [x] Auth flows work (register, login, OAuth)
+- [x] Room creation → channel join → playback sync works end-to-end
+- [x] Presence tracks connected users
+- [x] Invite codes work for room discovery
+- [x] Health endpoint responds
