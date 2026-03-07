@@ -112,4 +112,16 @@ defmodule OpenParty.Rooms.RoomServerTest do
     assert {:error, :invalid_position} = RoomServer.play(room.id, user.id, -1)
     assert {:error, :invalid_position} = RoomServer.pause(room.id, user.id, "bad")
   end
+
+  test "sync_check returns corrective snapshot for stale revision", %{room: room, user: user} do
+    start_supervised!({RoomServer, room.id})
+    RoomServer.play(room.id, user.id, 0)
+    RoomServer.pause(room.id, user.id, 1000)  # revision is now 2
+
+    # Client sends revision 0 (stale) — must get corrective snapshot regardless of drift
+    assert {:ok, {:corrective_snapshot, snapshot}} =
+             RoomServer.sync_check(room.id, user.id, 1000, 0)
+
+    assert snapshot.revision == 2
+  end
 end
