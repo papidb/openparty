@@ -4,11 +4,12 @@ defmodule OpenPartyWeb.HealthController do
 
   alias OpenPartyWeb.Schemas
 
-  operation :index,
+  operation(:index,
     summary: "Health check",
     responses: %{
       200 => {"Health response", "application/json", Schemas.HealthResponse}
     }
+  )
 
   def index(conn, _params) do
     json(conn, %{status: "ok"})

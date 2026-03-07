@@ -59,6 +59,33 @@ Local development defaults:
 - Dev database: `postgres/postgres@localhost/open_party_dev`
 - Dev mailbox: `/dev/mailbox`
 
+## Workspace Layout (Backend + Extension)
+
+The Phoenix backend stays in place. Extension work lives beside it so we avoid risky backend refactors.
+
+- `extension/` Chrome extension scaffold (Manifest V3, popup, background worker)
+- `shared/api-client/` shared JavaScript API helpers and generated OpenAPI typings
+- `shared/openapi/` pulled OpenAPI spec artifacts
+- `scripts/pull-openapi.mjs` fetches `/api/openapi` into `shared/openapi/openapi.json`
+
+Install workspace dependencies from repo root:
+
+```bash
+npm install
+```
+
+Generate shared API typings from the running backend:
+
+```bash
+npm run openapi:gen
+```
+
+If your backend is not on localhost, set:
+
+```bash
+OPENPARTY_OPENAPI_URL="https://your-host/api/openapi" npm run openapi:gen
+```
+
 ## Environment Variables
 
 | Variable | Required | Description |
@@ -141,7 +168,7 @@ Client events:
   - `seek` with `{"position_ms": <int>}`
 - Any participant:
   - `request_snapshot`
-  - `sync_check` with `{"position_ms": <int>, "revision": <int>}`
+  - `sync_check` with `{"position_ms": <int>, "last_applied_revision": <int>}`
 
 Server messages:
 

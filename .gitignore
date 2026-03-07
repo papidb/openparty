@@ -34,4 +34,6 @@ open_party-*.tar
 # In case you use Node.js/npm, you want to ignore these.
 npm-debug.log
 /assets/node_modules/
-
+/node_modules/
+/extension/node_modules/
+/shared/api-client/node_modules/

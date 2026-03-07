@@ -1,0 +1,9 @@
+{
+  "name": "openparty-extension",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "check": "node -e \"console.log('extension scaffold ready')\""
+  }
+}
