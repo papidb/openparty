@@ -40,6 +40,7 @@ defmodule OpenParty.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      {:bcrypt_elixir, "~> 3.0"},
       {:phoenix, "~> 1.8.5"},
       {:phoenix_ecto, "~> 4.5"},
       {:ecto_sql, "~> 3.13"},
@@ -60,6 +61,7 @@ defmodule OpenParty.MixProject do
       {:telemetry_metrics, "~> 1.0"},
       {:telemetry_poller, "~> 1.0"},
       {:jason, "~> 1.2"},
+      {:swoosh, "~> 1.16"},
       {:corsica, "~> 2.0"},
       {:dns_cluster, "~> 0.2.0"},
       {:bandit, "~> 1.5"}
