@@ -491,7 +491,7 @@ Max Concurrent: 5 (Wave 2)
 
 <!-- WAVE 4 -->
 
-- [ ] T13. **Playback commands (play/pause/seek)** — `deep`
+- [x] T13. **Playback commands (play/pause/seek)** — `deep`
   Implement the playback command handlers in RoomChannel. These are the core of the protocol — host sends a command, server validates authority, updates state, broadcasts to all clients.
   **What to do**:
   1. In `room_channel.ex`, add `handle_in/3` for `"play"`:
@@ -540,7 +540,7 @@ Max Concurrent: 5 (Wave 2)
   **Must NOT do**: Do not implement playback rate correction (not in MVP). Do not broadcast on sync_check — it's a per-client response only.
   **Verify**: `mix compile` succeeds. Channel test: client sends sync_check with large drift → receives corrective snapshot. Client with small drift → receives in_sync.
 
-- [ ] T15. **Inactivity timeout + room cleanup** — `unspecified-high`
+- [x] T15. **Inactivity timeout + room cleanup** — `unspecified-high`
   Add idle timeout to room processes so they terminate after 15 minutes with no connected users. Use Presence to detect when a room is empty.
   **What to do**:
   1. In `room_channel.ex`, `terminate/2` — when a user disconnects (channel terminated), check if room is now empty:
