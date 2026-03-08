@@ -1,0 +1,13 @@
+
+WXT 0.20.18
+ℹ Building chrome-mv3 for production with Vite 7.3.1
+- Preparing...
+✔ Built extension in 1.144 s
+  ├─ .output/chrome-mv3/manifest.json               357 B    
+  ├─ .output/chrome-mv3/popup.html                  389 B    
+  ├─ .output/chrome-mv3/background.js               26.33 kB 
+  ├─ .output/chrome-mv3/chunks/popup-BecMNo2l.js    152.14 kB
+  ├─ .output/chrome-mv3/content-scripts/content.js  5.97 kB  
+  └─ .output/chrome-mv3/assets/popup-hDTlk97y.css   11.52 kB 
+Σ Total size: 196.71 kB                           
+✔ Finished in 1.312 s
