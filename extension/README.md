@@ -1,21 +1,27 @@
-# OpenParty Chrome Extension (Scaffold)
+# OpenParty Browser Extension
 
-This folder is a Manifest V3 scaffold for the future OpenParty browser extension.
+WXT-based browser extension shell for OpenParty.
 
-## Load locally
+## Development
 
-1. Open `chrome://extensions`
-2. Enable Developer mode
-3. Click "Load unpacked"
-4. Select the `extension/` directory
+From repository root:
 
-## Stored config keys
+```bash
+npm install
+```
 
-- `apiBase` (default `http://localhost:4000`)
-- `inviteCode`
+From `extension/`:
 
-## Room socket join params (from backend contract)
+```bash
+npx wxt
+```
 
-- Socket connect params: `{ "token": "<bearer_token>" }`
-- Topic: `room:<room_id>`
-- Join payload: `{}`
+## Build
+
+From `extension/`:
+
+```bash
+npx wxt build
+```
+
+Built artifacts are generated in `extension/.output/`.
