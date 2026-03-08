@@ -25,3 +25,32 @@ export async function getRoomByInviteCode(apiBase, token, code) {
 
   return response.json();
 }
+
+export async function createRoom(apiBase, token) {
+  const response = await fetch(`${apiBase}/api/rooms`, {
+    method: "POST",
+    headers: {
+      authorization: `Bearer ${token}`
+    }
+  });
+
+  if (!response.ok) {
+    throw new Error(`Room creation failed: ${response.status}`);
+  }
+
+  return response.json();
+}
+
+export async function getRoomById(apiBase, token, roomId) {
+  const response = await fetch(`${apiBase}/api/rooms/${roomId}`, {
+    headers: {
+      authorization: `Bearer ${token}`
+    }
+  });
+
+  if (!response.ok) {
+    throw new Error(`Room lookup failed: ${response.status}`);
+  }
+
+  return response.json();
+}
