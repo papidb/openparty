@@ -117,3 +117,6 @@
 - T13 is only partially implemented: manual invite-code join exists, but no detected auto-join from invite link/context on popup open.
 - Required output artifact exists at `extension/.output/chrome-mv3/manifest.json` with MV3 config.
 - Forbidden-pattern scans for chat/OAuth/daisyUI/@apply/token-refresh/notifications/history returned no matches in `extension/`.
+
+- 2026-03-08: pnpm migration pattern works by moving workspace declarations from root `package.json` into `pnpm-workspace.yaml` with explicit package globs/paths.
+- 2026-03-08: Root scripts should switch to `pnpm run`/`pnpm exec` to keep workspace tooling consistent under pnpm.

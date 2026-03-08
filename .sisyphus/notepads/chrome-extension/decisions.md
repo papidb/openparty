@@ -18,3 +18,6 @@
 ## [2026-03-08] F4 review decisions
 - Fidelity verdict should be REJECT when any task-level requirement is incomplete, even if guardrail contamination is clean.
 - Track unplanned implementation artifacts separately from forbidden-feature contamination to avoid conflating scope creep classes.
+
+- 2026-03-08: Kept `extension/package.json` and `shared/api-client/package.json` unchanged per task constraints; relied on existing `workspace:*` compatibility in pnpm.
+- 2026-03-08: Did not add `.npmrc` or extra pnpm config because `pnpm install` succeeded without additional configuration.

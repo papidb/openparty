@@ -17,3 +17,5 @@
   - `extension/types/style-env.d.ts`
   - `extension/tests/unit/setup.ts`
   - `extension/tests/e2e/helpers.ts`
+
+- 2026-03-08: `lsp_diagnostics` coverage is partial for this task because `yaml-language-server` is not installed and no Markdown LSP is configured in this environment.
