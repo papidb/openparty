@@ -1,13 +1,9 @@
 {
   "name": "openparty-workspace",
   "private": true,
-  "workspaces": [
-    "extension",
-    "shared/api-client"
-  ],
   "scripts": {
     "openapi:pull": "node scripts/pull-openapi.mjs",
-    "openapi:gen": "npm run openapi:pull && npx openapi-typescript shared/openapi/openapi.json -o shared/api-client/src/openapi.d.ts"
+    "openapi:gen": "pnpm run openapi:pull && pnpm exec openapi-typescript shared/openapi/openapi.json -o shared/api-client/src/openapi.d.ts"
   },
   "devDependencies": {
     "openapi-typescript": "^7.6.1"

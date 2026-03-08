@@ -71,7 +71,7 @@ The Phoenix backend stays in place. Extension work lives beside it so we avoid r
 Install workspace dependencies from repo root:
 
 ```bash
-npm install
+pnpm install
 ```
 
 Generate shared API typings from the running backend:
