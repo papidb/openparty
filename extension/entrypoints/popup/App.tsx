@@ -85,6 +85,7 @@ export default function App() {
   const joinFormId = "join-form";
   const joinCodeId = "join-code";
   const joinSubmitId = "join-submit";
+  const joinErrorId = "join-error";
   const disconnectPartyId = "disconnect-party";
 
   const [token, setToken] = useState<string | null>(null);
@@ -92,6 +93,7 @@ export default function App() {
   const [videoDetected, setVideoDetected] = useState(false);
   const [room, setRoom] = useState<StoredRoom | null>(null);
   const [inviteCodeInput, setInviteCodeInput] = useState("");
+  const [joinError, setJoinError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [booting, setBooting] = useState(true);
@@ -104,7 +106,7 @@ export default function App() {
       return "";
     }
 
-    return `${API_BASE}/?invite=${room.inviteCode}`;
+    return `${API_BASE}/join/${room.inviteCode}`;
   }, [room]);
 
   useEffect(() => {
@@ -155,6 +157,7 @@ export default function App() {
     event.preventDefault();
     setLoading(true);
     setError(null);
+    setJoinError(null);
 
     try {
       const result = await createToken(API_BASE, email.trim(), password);
@@ -188,7 +191,12 @@ export default function App() {
       await setStorage({ activeRoom: nextRoom });
       setRoom(nextRoom);
       setView("in-room");
-      chrome.runtime.sendMessage({ type: "JOIN_ROOM", roomId: nextRoom.roomId, token });
+      chrome.runtime.sendMessage({
+        type: "JOIN_ROOM",
+        roomId: nextRoom.roomId,
+        token,
+        wsUrl: `ws://${new URL(API_BASE).host}/socket/websocket`
+      });
     } catch (roomError) {
       setError(getErrorMessage(roomError, "Unable to start party."));
     } finally {
@@ -205,12 +213,13 @@ export default function App() {
 
     const code = inviteCodeInput.trim();
     if (!code) {
-      setError("Enter an invite code to join a party.");
+      setJoinError("Enter an invite code to join a party.");
       return;
     }
 
     setLoading(true);
     setError(null);
+    setJoinError(null);
 
     try {
       const roomData = await getRoomByInviteCode(API_BASE, token, code);
@@ -223,9 +232,14 @@ export default function App() {
       await setStorage({ activeRoom: nextRoom });
       setRoom(nextRoom);
       setView("in-room");
-      chrome.runtime.sendMessage({ type: "JOIN_ROOM", roomId: nextRoom.roomId, token });
+      chrome.runtime.sendMessage({
+        type: "JOIN_ROOM",
+        roomId: nextRoom.roomId,
+        token,
+        wsUrl: `ws://${new URL(API_BASE).host}/socket/websocket`
+      });
     } catch (joinError) {
-      setError(getErrorMessage(joinError, "Unable to join room."));
+      setJoinError(getErrorMessage(joinError, "Room not found or invite code invalid"));
     } finally {
       setLoading(false);
     }
@@ -238,7 +252,9 @@ export default function App() {
     try {
       await removeStorage("activeRoom");
       setRoom(null);
-      setView(token ? "lobby" : "login");
+      setView("lobby");
+      setInviteCodeInput("");
+      setJoinError(null);
       chrome.runtime.sendMessage({ type: "LEAVE_ROOM" });
     } finally {
       setLoading(false);
@@ -385,18 +401,24 @@ export default function App() {
                 id={joinCodeId}
                 type="text"
                 value={inviteCodeInput}
-                onChange={(event) => setInviteCodeInput(event.target.value)}
+                onChange={(event) => {
+                  setInviteCodeInput(event.target.value);
+                  if (joinError) {
+                    setJoinError(null);
+                  }
+                }}
                 className="w-full rounded-lg border border-[#2a2a35] bg-[#101015] px-3 py-2 text-sm text-[#f0f0f0] outline-none transition focus:border-[#7c3aed] focus:ring-2 focus:ring-[#7c3aed]/40"
                 placeholder="e.g. PARTY123"
               />
               <button
                 id={joinSubmitId}
                 type="submit"
-                disabled={loading}
+                disabled={loading || !inviteCodeInput.trim()}
                 className="w-full rounded-lg border border-[#343442] bg-[#1d1d26] px-3 py-2 text-sm font-medium text-[#f0f0f0] transition hover:border-[#7c3aed]/60 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {loading ? "Joining..." : "Join Party"}
               </button>
+              {joinError && <div id={joinErrorId} className="rounded-md border border-[#ef4444]/40 bg-[#ef4444]/10 px-3 py-2 text-xs text-[#ef8c8c]">{joinError}</div>}
             </form>
           </section>
         )}
