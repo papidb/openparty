@@ -41,6 +41,14 @@ type RuntimeSidebarMessage =
       participants?: Participant[];
     }
   | {
+      type: "CORRECTIVE_SNAPSHOT";
+      snapshot?: {
+        playback_state?: "playing" | "paused";
+        base_position_ms?: number;
+        revision?: number;
+      };
+    }
+  | {
       type: "ROOM_LEFT";
     };
 
@@ -91,6 +99,20 @@ function formatPosition(positionMs: number): string {
   return `${minutes}:${seconds}`;
 }
 
+function getDisplayName(raw: string | undefined): string {
+  const value = (raw ?? "").trim();
+  if (value.length === 0) {
+    return "Anonymous";
+  }
+
+  if (value.includes("@")) {
+    const emailPrefix = value.split("@")[0]?.trim();
+    return emailPrefix && emailPrefix.length > 0 ? emailPrefix : "Anonymous";
+  }
+
+  return value;
+}
+
 function normalizeParticipants(input: Participant[] | undefined): Participant[] {
   if (!Array.isArray(input)) {
     return [];
@@ -104,7 +126,7 @@ function normalizeParticipants(input: Participant[] | undefined): Participant[] 
 
     deduped.set(participant.userId, {
       userId: participant.userId,
-      displayName: participant.displayName || "Anonymous",
+      displayName: getDisplayName(participant.displayName),
       isHost: Boolean(participant.isHost)
     });
   }
@@ -121,21 +143,19 @@ export default function Sidebar({ onClose }: SidebarProps) {
   const [detailMode, setDetailMode] = useState(false);
   const [activities, setActivities] = useState<ActivityEntry[]>([]);
   const [participants, setParticipants] = useState<Participant[]>([]);
-  const participantsRef = useRef<Participant[]>([]);
+  const prevParticipantsRef = useRef<Participant[]>([]);
+  const playbackRef = useRef<PlaybackState | null>(null);
 
-  const appendActivities = useCallback((entries: Array<Omit<ActivityEntry, "id">>) => {
-    if (entries.length === 0) {
-      return;
-    }
-
+  const addActivity = useCallback((entry: Omit<ActivityEntry, "id" | "timestamp">) => {
     setActivities((previous) => {
-      const nextEntries = entries.map((entry, index) => ({
+      const nextEntry: ActivityEntry = {
         ...entry,
-        id: `${entry.type}-${entry.timestamp}-${index}-${Math.random().toString(36).slice(2, 8)}`
-      }));
+        id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        timestamp: Date.now()
+      };
 
-      const merged = [...previous, ...nextEntries];
-      return merged.slice(Math.max(0, merged.length - MAX_ACTIVITIES));
+      const merged = [...previous, nextEntry];
+      return merged.length > MAX_ACTIVITIES ? merged.slice(-MAX_ACTIVITIES) : merged;
     });
   }, []);
 
@@ -148,14 +168,11 @@ export default function Sidebar({ onClose }: SidebarProps) {
       const runtimeMessage = message as RuntimeSidebarMessage;
       switch (runtimeMessage.type) {
         case "ROOM_JOINED": {
-          appendActivities([
-            {
-              type: "sync",
-              displayName: runtimeMessage.isHost ? "Host" : "You",
-              timestamp: Date.now(),
-              detail: runtimeMessage.isHost ? "party started" : "party joined"
-            }
-          ]);
+          addActivity({
+            type: "join",
+            displayName: runtimeMessage.isHost ? "Host" : "You",
+            detail: "party started"
+          });
           break;
         }
 
@@ -164,53 +181,82 @@ export default function Sidebar({ onClose }: SidebarProps) {
             return;
           }
 
-          const hostName =
-            participantsRef.current.find((participant) => participant.userId === runtimeMessage.state?.hostUserId)
-              ?.displayName ?? "Host";
+          const state = runtimeMessage.state;
 
-          const type: ActivityType = runtimeMessage.state.status === "playing" ? "play" : "pause";
-          appendActivities([
-            {
-              type,
+          const hostName = getDisplayName(
+            prevParticipantsRef.current.find((participant) => participant.userId === state.hostUserId)?.displayName ?? "Host"
+          );
+
+          const previousPlayback = playbackRef.current;
+          if (
+            previousPlayback &&
+            previousPlayback.status === state.status &&
+            Math.abs(state.positionMs - previousPlayback.positionMs) >= 3000
+          ) {
+            addActivity({
+              type: "seek",
               displayName: hostName,
-              timestamp: Date.now(),
-              detail: `at ${formatPosition(runtimeMessage.state.positionMs)}`
-            }
-          ]);
+              detail: `to ${formatPosition(state.positionMs)}`
+            });
+          }
+
+          const type: ActivityType = state.status === "playing" ? "play" : "pause";
+          addActivity({
+            type,
+            displayName: hostName,
+            detail: `at ${formatPosition(state.positionMs)}`
+          });
+          playbackRef.current = state;
           break;
         }
 
         case "PRESENCE_UPDATE": {
           const nextParticipants = normalizeParticipants(runtimeMessage.participants);
-          const previousParticipants = participantsRef.current;
-          const previousIds = new Set(previousParticipants.map((participant) => participant.userId));
-          const nextIds = new Set(nextParticipants.map((participant) => participant.userId));
+          const previousParticipants = prevParticipantsRef.current;
 
-          const now = Date.now();
-          const joinedEntries = nextParticipants
-            .filter((participant) => !previousIds.has(participant.userId))
-            .map((participant) => ({
-              type: "join" as const,
-              displayName: participant.displayName,
-              timestamp: now
-            }));
+          const joined = nextParticipants.filter(
+            (nextParticipant) => !previousParticipants.some((prevParticipant) => prevParticipant.userId === nextParticipant.userId)
+          );
 
-          const leftEntries = previousParticipants
-            .filter((participant) => !nextIds.has(participant.userId))
-            .map((participant) => ({
-              type: "leave" as const,
-              displayName: participant.displayName,
-              timestamp: now
-            }));
+          const left = previousParticipants.filter(
+            (prevParticipant) => !nextParticipants.some((nextParticipant) => nextParticipant.userId === prevParticipant.userId)
+          );
 
-          participantsRef.current = nextParticipants;
+          for (const participant of joined) {
+            addActivity({
+              type: "join",
+              displayName: getDisplayName(participant.displayName)
+            });
+          }
+
+          for (const participant of left) {
+            addActivity({
+              type: "leave",
+              displayName: getDisplayName(participant.displayName)
+            });
+          }
+
+          prevParticipantsRef.current = nextParticipants;
           setParticipants(nextParticipants);
-          appendActivities([...joinedEntries, ...leftEntries]);
+          break;
+        }
+
+        case "CORRECTIVE_SNAPSHOT": {
+          const position = runtimeMessage.snapshot?.base_position_ms;
+          const detail =
+            typeof position === "number" ? `drift corrected to ${formatPosition(position)}` : "drift corrected";
+
+          addActivity({
+            type: "sync",
+            displayName: "System",
+            detail
+          });
           break;
         }
 
         case "ROOM_LEFT": {
-          participantsRef.current = [];
+          prevParticipantsRef.current = [];
+          playbackRef.current = null;
           setParticipants([]);
           setActivities([]);
           break;
@@ -225,7 +271,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
     return () => {
       chrome.runtime.onMessage.removeListener(handler);
     };
-  }, [appendActivities]);
+  }, [addActivity]);
 
   const visibleActivities = useMemo(
     () =>
