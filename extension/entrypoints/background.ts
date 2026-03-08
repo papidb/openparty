@@ -446,6 +446,6 @@ function messageHandler(
 }
 
 export default defineBackground(() => {
-  console.log("[OpenParty] Background service worker started");
+  // Background service worker initialized
   chrome.runtime.onMessage.addListener(messageHandler);
 });
