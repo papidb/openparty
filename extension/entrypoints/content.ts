@@ -11,6 +11,9 @@ interface PlaybackState {
 interface RoomJoinedMessage {
   type: "ROOM_JOINED";
   isHost: boolean;
+  snapshot?: {
+    revision?: number;
+  };
 }
 
 interface PlaybackUpdateMessage {
@@ -22,7 +25,26 @@ interface RoomLeftMessage {
   type: "ROOM_LEFT";
 }
 
-type RuntimeInboundMessage = RoomJoinedMessage | PlaybackUpdateMessage | RoomLeftMessage;
+interface CorrectiveSnapshotMessage {
+  type: "CORRECTIVE_SNAPSHOT";
+  snapshot?: {
+    playback_state?: PlaybackStatus;
+    base_position_ms?: number;
+    revision?: number;
+  };
+}
+
+interface MinorDriftMessage {
+  type: "MINOR_DRIFT";
+  driftMs?: number;
+}
+
+type RuntimeInboundMessage =
+  | RoomJoinedMessage
+  | PlaybackUpdateMessage
+  | RoomLeftMessage
+  | CorrectiveSnapshotMessage
+  | MinorDriftMessage;
 
 export default defineContentScript({
   matches: ["<all_urls>"],
@@ -175,6 +197,16 @@ export default defineContentScript({
           isHost = message.isHost;
           guestMode = !message.isHost;
 
+          import("./sidebar/mount")
+            .then(({ mountSidebar }) => {
+              mountSidebar();
+            })
+            .catch(() => {
+            });
+          if (typeof message.snapshot?.revision === "number") {
+            lastRevision = message.snapshot.revision;
+          }
+
           if (currentVideo) {
             detachVideoListeners();
             attachVideoListeners(currentVideo);
@@ -193,14 +225,41 @@ export default defineContentScript({
         }
 
         case "PLAYBACK_UPDATE": {
-          if (typeof message.state?.revision === "number") {
-            lastRevision = message.state.revision;
-          }
-
           if (guestMode && currentVideo && message.state) {
             applyPlaybackState(message.state);
+            if (typeof message.state.revision === "number") {
+              lastRevision = message.state.revision;
+            }
           }
 
+          break;
+        }
+
+        case "CORRECTIVE_SNAPSHOT": {
+          if (currentVideo && message.snapshot) {
+            const snap = message.snapshot;
+            const targetMs = typeof snap.base_position_ms === "number" ? snap.base_position_ms : 0;
+            const currentMs = Math.floor(currentVideo.currentTime * 1000);
+
+            if (Math.abs(targetMs - currentMs) > 200) {
+              currentVideo.currentTime = targetMs / 1000;
+            }
+
+            if (snap.playback_state === "playing" && currentVideo.paused) {
+              currentVideo.play().catch(() => {});
+            } else if (snap.playback_state === "paused" && !currentVideo.paused) {
+              currentVideo.pause();
+            }
+
+            if (typeof snap.revision === "number") {
+              lastRevision = snap.revision;
+            }
+          }
+
+          break;
+        }
+
+        case "MINOR_DRIFT": {
           break;
         }
 
@@ -208,6 +267,14 @@ export default defineContentScript({
           isHost = false;
           guestMode = false;
           lastRevision = 0;
+
+          import("./sidebar/mount")
+            .then(({ unmountSidebar }) => {
+              unmountSidebar();
+            })
+            .catch(() => {
+            });
+
           if (syncInterval) {
             clearInterval(syncInterval);
             syncInterval = null;

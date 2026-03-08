@@ -77,6 +77,19 @@ interface PlaybackUpdatedPayload {
   host_user_id?: string;
 }
 
+interface CorrectiveSnapshotPayload {
+  playback_state?: PlaybackStatus;
+  base_position_ms?: number;
+  revision?: number;
+  host_user_id?: string;
+}
+
+interface SyncCheckReply {
+  status?: "in_sync" | "minor_drift";
+  drift_ms?: number;
+  corrective_snapshot?: CorrectiveSnapshotPayload;
+}
+
 type PresenceEntry =
   | {
       metas?: Array<Record<string, unknown>>;
@@ -399,7 +412,19 @@ function messageHandler(
           position_ms: message.positionMs,
           last_applied_revision: message.lastRevision
         })
-        .receive("ok", (reply: unknown) => {
+        .receive("ok", (reply: SyncCheckReply) => {
+          if (reply.corrective_snapshot) {
+            broadcastToAll({
+              type: "CORRECTIVE_SNAPSHOT",
+              snapshot: reply.corrective_snapshot
+            });
+          } else if (reply.status === "minor_drift") {
+            broadcastToAll({
+              type: "MINOR_DRIFT",
+              driftMs: asNumber(reply.drift_ms, 0)
+            });
+          }
+
           sendResponse({ reply });
         })
         .receive("error", (reason: unknown) => {
