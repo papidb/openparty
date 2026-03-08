@@ -11,6 +11,12 @@ type StoredRoom = {
 
 const API_BASE = "http://localhost:4000";
 
+function buildSocketEndpoint(apiBase: string): string {
+  const parsed = new URL(apiBase);
+  const wsProtocol = parsed.protocol === "https:" ? "wss:" : "ws:";
+  return `${wsProtocol}//${parsed.host}/socket`;
+}
+
 function normalizeRoom(room: unknown): StoredRoom | null {
   if (!room || typeof room !== "object") {
     return null;
@@ -231,7 +237,7 @@ export default function App() {
         type: "JOIN_ROOM",
         roomId: nextRoom.roomId,
         token,
-        wsUrl: `ws://${new URL(API_BASE).host}/socket/websocket`
+        wsUrl: buildSocketEndpoint(API_BASE)
       });
     } catch (roomError) {
       setError(getErrorMessage(roomError, "Unable to start party."));
@@ -272,7 +278,7 @@ export default function App() {
         type: "JOIN_ROOM",
         roomId: nextRoom.roomId,
         token,
-        wsUrl: `ws://${new URL(API_BASE).host}/socket/websocket`
+        wsUrl: buildSocketEndpoint(API_BASE)
       });
     } catch (joinError) {
       setJoinError(getErrorMessage(joinError, "Room not found or invite code invalid"));

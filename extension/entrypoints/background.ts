@@ -113,7 +113,7 @@ interface PresenceDiffPayload {
   leaves?: Record<string, PresenceEntry>;
 }
 
-const DEFAULT_WS_URL = "ws://localhost:4000/socket/websocket";
+const DEFAULT_WS_URL = "ws://localhost:4000/socket";
 
 let socket: Socket | null = null;
 let channel: Channel | null = null;
