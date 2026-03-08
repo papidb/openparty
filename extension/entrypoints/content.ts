@@ -1,4 +1,4 @@
-type HostEventName = "play" | "pause" | "seek";
+type HostEventName = "play" | "pause";
 
 type PlaybackStatus = "playing" | "paused";
 
@@ -25,20 +25,6 @@ interface RoomLeftMessage {
   type: "ROOM_LEFT";
 }
 
-interface CorrectiveSnapshotMessage {
-  type: "CORRECTIVE_SNAPSHOT";
-  snapshot?: {
-    playback_state?: PlaybackStatus;
-    base_position_ms?: number;
-    revision?: number;
-  };
-}
-
-interface MinorDriftMessage {
-  type: "MINOR_DRIFT";
-  driftMs?: number;
-}
-
 interface GetVideoStatusMessage {
   type: "GET_VIDEO_STATUS";
 }
@@ -47,8 +33,6 @@ type RuntimeInboundMessage =
   | RoomJoinedMessage
   | PlaybackUpdateMessage
   | RoomLeftMessage
-  | CorrectiveSnapshotMessage
-  | MinorDriftMessage
   | GetVideoStatusMessage;
 
 export default defineContentScript({
@@ -57,9 +41,7 @@ export default defineContentScript({
     let currentVideo: HTMLVideoElement | null = null;
     let isHost = false;
     let guestMode = false;
-    let syncInterval: ReturnType<typeof setInterval> | null = null;
     let detectedVideo = false;
-    let lastRevision = 0;
 
     const notifyVideoStatus = (detected: boolean) => {
       try {
@@ -86,10 +68,6 @@ export default defineContentScript({
       sendHostEvent("pause", event.target as HTMLVideoElement);
     };
 
-    const handleSeeked = (event: Event) => {
-      sendHostEvent("seek", event.target as HTMLVideoElement);
-    };
-
     const attachVideoListeners = (video: HTMLVideoElement) => {
       if (!isHost) {
         return;
@@ -97,7 +75,6 @@ export default defineContentScript({
 
       video.addEventListener("play", handlePlay);
       video.addEventListener("pause", handlePause);
-      video.addEventListener("seeked", handleSeeked);
     };
 
     const detachVideoListeners = () => {
@@ -107,7 +84,6 @@ export default defineContentScript({
 
       currentVideo.removeEventListener("play", handlePlay);
       currentVideo.removeEventListener("pause", handlePause);
-      currentVideo.removeEventListener("seeked", handleSeeked);
     };
 
     const findLargestVisibleVideo = (): HTMLVideoElement | null => {
@@ -135,32 +111,11 @@ export default defineContentScript({
         return;
       }
 
-      const targetMs = state.positionMs;
-      const currentMs = Math.floor(currentVideo.currentTime * 1000);
-
-      if (Math.abs(targetMs - currentMs) > 500) {
-        currentVideo.currentTime = targetMs / 1000;
-      }
-
       if (state.status === "playing" && currentVideo.paused) {
         currentVideo.play().catch(() => {});
       } else if (state.status === "paused" && !currentVideo.paused) {
         currentVideo.pause();
       }
-    };
-
-    const doSyncCheck = () => {
-      if (!currentVideo || !guestMode) {
-        return;
-      }
-
-      try {
-        chrome.runtime.sendMessage({
-          type: "SYNC_CHECK",
-          positionMs: Math.floor(currentVideo.currentTime * 1000),
-          lastRevision
-        });
-      } catch {}
     };
 
     const checkForVideo = () => {
@@ -209,22 +164,9 @@ export default defineContentScript({
             })
             .catch(() => {
             });
-          if (typeof message.snapshot?.revision === "number") {
-            lastRevision = message.snapshot.revision;
-          }
-
           if (currentVideo) {
             detachVideoListeners();
             attachVideoListeners(currentVideo);
-          }
-
-          if (guestMode && !syncInterval) {
-            syncInterval = setInterval(doSyncCheck, 7000);
-          }
-
-          if (!guestMode && syncInterval) {
-            clearInterval(syncInterval);
-            syncInterval = null;
           }
 
           break;
@@ -233,46 +175,14 @@ export default defineContentScript({
         case "PLAYBACK_UPDATE": {
           if (guestMode && currentVideo && message.state) {
             applyPlaybackState(message.state);
-            if (typeof message.state.revision === "number") {
-              lastRevision = message.state.revision;
-            }
           }
 
-          break;
-        }
-
-        case "CORRECTIVE_SNAPSHOT": {
-          if (currentVideo && message.snapshot) {
-            const snap = message.snapshot;
-            const targetMs = typeof snap.base_position_ms === "number" ? snap.base_position_ms : 0;
-            const currentMs = Math.floor(currentVideo.currentTime * 1000);
-
-            if (Math.abs(targetMs - currentMs) > 200) {
-              currentVideo.currentTime = targetMs / 1000;
-            }
-
-            if (snap.playback_state === "playing" && currentVideo.paused) {
-              currentVideo.play().catch(() => {});
-            } else if (snap.playback_state === "paused" && !currentVideo.paused) {
-              currentVideo.pause();
-            }
-
-            if (typeof snap.revision === "number") {
-              lastRevision = snap.revision;
-            }
-          }
-
-          break;
-        }
-
-        case "MINOR_DRIFT": {
           break;
         }
 
         case "ROOM_LEFT": {
           isHost = false;
           guestMode = false;
-          lastRevision = 0;
 
           import("./sidebar/mount")
             .then(({ unmountSidebar }) => {
@@ -281,10 +191,6 @@ export default defineContentScript({
             .catch(() => {
             });
 
-          if (syncInterval) {
-            clearInterval(syncInterval);
-            syncInterval = null;
-          }
           if (currentVideo) {
             detachVideoListeners();
           }

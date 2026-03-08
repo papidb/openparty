@@ -1,7 +1,7 @@
 import { Channel, Socket } from "phoenix";
 
 type PlaybackStatus = "playing" | "paused";
-type HostEventType = "play" | "pause" | "seek";
+type HostEventType = "play" | "pause";
 
 interface PlaybackState {
   status: PlaybackStatus;
@@ -464,18 +464,6 @@ function messageHandler(
           last_applied_revision: message.lastRevision
         })
         .receive("ok", (reply: SyncCheckReply) => {
-          if (reply.corrective_snapshot) {
-            broadcastToAll({
-              type: "CORRECTIVE_SNAPSHOT",
-              snapshot: reply.corrective_snapshot
-            });
-          } else if (reply.status === "minor_drift") {
-            broadcastToAll({
-              type: "MINOR_DRIFT",
-              driftMs: asNumber(reply.drift_ms, 0)
-            });
-          }
-
           sendResponse({ reply });
         })
         .receive("error", (reason: unknown) => {
@@ -499,7 +487,7 @@ function messageHandler(
 export default defineBackground(() => {
   // Background service worker initialized
   chrome.runtime.onMessage.addListener(messageHandler);
-  chrome.tabs.onRemoved.addListener((tabId) => {
+  chrome.tabs.onRemoved.addListener((tabId: number) => {
     videoStatusByTabId.delete(tabId);
   });
 });
