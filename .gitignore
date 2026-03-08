@@ -37,3 +37,9 @@ npm-debug.log
 /node_modules/
 /extension/node_modules/
 /shared/api-client/node_modules/
+
+# Local agent planning/evidence artifacts
+/.sisyphus/
+
+# Built Chrome extension artifacts
+/extension/.output/
