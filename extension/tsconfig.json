@@ -7,5 +7,5 @@
     "strict": true,
     "skipLibCheck": true
   },
-  "include": ["entrypoints/**/*", "wxt.config.ts"]
+  "include": ["entrypoints/**/*", "types/**/*.d.ts", "wxt.config.ts"]
 }
