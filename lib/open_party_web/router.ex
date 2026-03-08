@@ -28,6 +28,7 @@ defmodule OpenPartyWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :home
+    get "/demo-video", PageController, :demo_video
     get "/auth/:provider", AuthController, :request
     get "/auth/:provider/callback", AuthController, :callback
   end
