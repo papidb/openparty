@@ -39,12 +39,17 @@ interface MinorDriftMessage {
   driftMs?: number;
 }
 
+interface GetVideoStatusMessage {
+  type: "GET_VIDEO_STATUS";
+}
+
 type RuntimeInboundMessage =
   | RoomJoinedMessage
   | PlaybackUpdateMessage
   | RoomLeftMessage
   | CorrectiveSnapshotMessage
-  | MinorDriftMessage;
+  | MinorDriftMessage
+  | GetVideoStatusMessage;
 
 export default defineContentScript({
   matches: ["<all_urls>"],
@@ -58,7 +63,8 @@ export default defineContentScript({
 
     const notifyVideoStatus = (detected: boolean) => {
       try {
-        chrome.runtime.sendMessage({ type: "VIDEO_STATUS", detected });
+        chrome.runtime.sendMessage({ type: "REPORT_VIDEO_STATUS", detected });
+        console.debug("[OpenParty][content] video status changed", { detected, href: location.href });
       } catch {}
     };
 
@@ -282,6 +288,13 @@ export default defineContentScript({
           if (currentVideo) {
             detachVideoListeners();
           }
+          break;
+        }
+
+        case "GET_VIDEO_STATUS": {
+          try {
+            chrome.runtime.sendMessage({ type: "REPORT_VIDEO_STATUS", detected: detectedVideo });
+          } catch {}
           break;
         }
 

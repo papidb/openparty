@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { createRoom, createToken, getRoomByInviteCode } from "@openparty/api-client";
 
 type View = "login" | "lobby" | "in-room";
@@ -63,6 +63,12 @@ type AuthState = {
   activeRoom?: unknown;
 };
 
+type VideoStatusPayload = {
+  type?: string;
+  detected?: boolean;
+  tabId?: number;
+};
+
 async function getStoredAuthState(): Promise<AuthState> {
   return new Promise((resolve) => {
     chrome.storage.local.get(["token", "activeRoom"], (result: AuthState) => {
@@ -100,6 +106,7 @@ export default function App() {
   const [copied, setCopied] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const activeTabIdRef = useRef<number | null>(null);
 
   const inviteLink = useMemo(() => {
     if (!room) {
@@ -129,6 +136,28 @@ export default function App() {
         }
       }
 
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        const tabId = tabs[0]?.id;
+        if (typeof tabId !== "number") {
+          return;
+        }
+
+        activeTabIdRef.current = tabId;
+
+        chrome.runtime.sendMessage({ type: "GET_VIDEO_STATUS", tabId }, (response: VideoStatusPayload) => {
+          if (chrome.runtime.lastError) {
+            return;
+          }
+
+          if (response?.type === "VIDEO_STATUS") {
+            setVideoDetected(Boolean(response.detected));
+          }
+        });
+
+        chrome.tabs.sendMessage(tabId, { type: "GET_VIDEO_STATUS" }).catch(() => {
+        });
+      });
+
       setBooting(false);
     };
 
@@ -139,8 +168,15 @@ export default function App() {
         return;
       }
 
-      const payload = msg as { type?: string; detected?: boolean };
+      const payload = msg as VideoStatusPayload;
       if (payload.type === "VIDEO_STATUS") {
+        if (
+          typeof payload.tabId === "number" &&
+          activeTabIdRef.current !== null &&
+          payload.tabId !== activeTabIdRef.current
+        ) {
+          return;
+        }
         setVideoDetected(Boolean(payload.detected));
       }
     };

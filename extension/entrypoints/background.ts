@@ -54,12 +54,24 @@ interface GetSessionStateMessage {
   type: "GET_SESSION_STATE";
 }
 
+interface ReportVideoStatusMessage {
+  type: "REPORT_VIDEO_STATUS";
+  detected: boolean;
+}
+
+interface GetVideoStatusMessage {
+  type: "GET_VIDEO_STATUS";
+  tabId?: number;
+}
+
 type InboundMessage =
   | JoinRoomMessage
   | LeaveRoomMessage
   | HostEventMessage
   | SyncCheckMessage
-  | GetSessionStateMessage;
+  | GetSessionStateMessage
+  | ReportVideoStatusMessage
+  | GetVideoStatusMessage;
 
 interface SnapshotPayload {
   invite_code?: string;
@@ -106,6 +118,7 @@ const DEFAULT_WS_URL = "ws://localhost:4000/socket/websocket";
 let socket: Socket | null = null;
 let channel: Channel | null = null;
 let session: SessionState | null = null;
+const videoStatusByTabId = new Map<number, boolean>();
 
 function asNumber(value: unknown, fallback = 0): number {
   return typeof value === "number" && Number.isFinite(value) ? value : fallback;
@@ -366,10 +379,48 @@ function connectToRoom(roomId: string, token: string, wsUrl: string): void {
 
 function messageHandler(
   message: InboundMessage,
-  _sender: unknown,
+  sender: chrome.runtime.MessageSender,
   sendResponse: (response?: unknown) => void
 ): boolean {
   switch (message.type) {
+    case "REPORT_VIDEO_STATUS": {
+      const tabId = sender.tab?.id;
+      if (typeof tabId === "number") {
+        videoStatusByTabId.set(tabId, Boolean(message.detected));
+      }
+
+      console.debug("[OpenParty][bg] report video status", {
+        tabId,
+        detected: Boolean(message.detected)
+      });
+
+      safeRuntimeBroadcast({
+        type: "VIDEO_STATUS",
+        detected: Boolean(message.detected),
+        tabId
+      });
+
+      sendResponse({ ok: true });
+      return false;
+    }
+
+    case "GET_VIDEO_STATUS": {
+      const tabId = typeof message.tabId === "number" ? message.tabId : sender.tab?.id;
+      const detected = typeof tabId === "number" ? videoStatusByTabId.get(tabId) : undefined;
+
+      console.debug("[OpenParty][bg] get video status", {
+        tabId,
+        detected: Boolean(detected)
+      });
+
+      sendResponse({
+        type: "VIDEO_STATUS",
+        detected: Boolean(detected),
+        tabId
+      });
+      return false;
+    }
+
     case "JOIN_ROOM": {
       connectToRoom(message.roomId, message.token, message.wsUrl ?? DEFAULT_WS_URL);
       sendResponse({ ok: true });
@@ -448,4 +499,7 @@ function messageHandler(
 export default defineBackground(() => {
   // Background service worker initialized
   chrome.runtime.onMessage.addListener(messageHandler);
+  chrome.tabs.onRemoved.addListener((tabId) => {
+    videoStatusByTabId.delete(tabId);
+  });
 });
