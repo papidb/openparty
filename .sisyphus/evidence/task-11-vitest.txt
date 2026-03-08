@@ -1,0 +1,12 @@
+
+ RUN  v2.1.9 /Users/user/playground/openparty/extension
+
+ ✓ tests/unit/activity.test.ts (8 tests) 5ms
+ ✓ tests/unit/sync.test.ts (3 tests) 7ms
+ ✓ tests/unit/api-client.test.ts (6 tests) 26ms
+
+ Test Files  3 passed (3)
+      Tests  17 passed (17)
+   Start at  10:12:14
+   Duration  1.10s (transform 96ms, setup 107ms, collect 58ms, tests 38ms, environment 1.46s, prepare 443ms)
+

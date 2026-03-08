@@ -1,0 +1,41 @@
+[Task 5] Popup UI — Login Form + Register Link + Party Controls
+Date: 2026-03-08
+
+Changed files:
+- extension/entrypoints/popup/App.tsx
+- extension/entrypoints/popup/main.tsx
+- extension/types/api-client.d.ts
+- extension/package.json
+
+Verification:
+1) LSP diagnostics
+- extension/entrypoints/popup/App.tsx -> no diagnostics found
+- extension/entrypoints/popup/main.tsx -> no diagnostics found
+- extension/types/api-client.d.ts -> no diagnostics found
+- extension/package.json -> no diagnostics found
+
+2) Typecheck + build
+Command: npx tsc --noEmit && npx wxt build
+Working directory: /Users/user/playground/openparty/extension
+Result: exit 0
+
+Key build output:
+- Built extension in 2.043 s
+- popup bundle: .output/chrome-mv3/chunks/popup-BecMNo2l.js
+- popup css: .output/chrome-mv3/assets/popup-hDTlk97y.css
+- Total size: 196.07 kB
+
+Implemented IDs:
+- login-form, login-email, login-password, login-submit
+- register-link, login-error
+- video-status, start-party
+- join-form, join-code, join-submit
+- invite-link, copy-invite, disconnect-party
+
+Behavior implemented:
+- Login via POST /api/tokens and token persistence in chrome.storage.local
+- Register link opens http://localhost:4000/users/register in a new tab
+- Lobby state with video detection status and start/join party controls
+- In-room state with invite link display/copy and disconnect flow
+- Room persistence in chrome.storage.local as activeRoom
+- Runtime messages: JOIN_ROOM and LEAVE_ROOM
